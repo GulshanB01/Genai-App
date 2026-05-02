@@ -1,0 +1,7 @@
+streamlit
+numpy
+pillow
+PyPDF2
+rank-bm25
+torch
+transformers

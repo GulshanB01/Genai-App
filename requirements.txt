@@ -5,3 +5,10 @@ PyPDF2
 rank-bm25
 torch
 transformers
+fastapi
+uvicorn
+python-multipart
+PyPDF2
+rank-bm25
+numpy
+groq

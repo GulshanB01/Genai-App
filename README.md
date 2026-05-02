@@ -10,7 +10,7 @@ The web app is deployed on **Streamlit Cloud**, with support for authentication,
 ##  Live Demo
 
 🔗 **Try the app here:**
-[https://smart-notes-ai.streamlit.app/](https://smart-notes-ai.streamlit.app/)
+https://genai-app-production-267e.up.railway.app/docs
 
 ---
 

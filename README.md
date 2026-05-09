@@ -1,16 +1,16 @@
 #  Smart Notes GenAI Assistant
 
-Smart Notes AI Assistant is an intelligent document-based Q&A system that allows users to upload their notes (PDF or text files) and ask questions directly from them.
-The system performs text extraction, chunking, semantic retrieval, and answer generation using a T5 model.
+Smart Notes AI Assistant is an intelligent document-based Q&A system that allows users to upload their notes (PDF or text files) and ask questions directly from them.  
+The system performs text extraction, chunking, BM25 semantic retrieval, and answer generation using the **Groq API (LLaMA 3.3 70B)**.
 
-The web app is deployed on **Streamlit Cloud**, with support for authentication, credit usage, and feedback logging for future model fine-tuning.
+The backend is powered by **FastAPI**, with support for document upload, question answering, and feedback logging for future model fine-tuning.
 
 ---
 
 ##  Live Demo
 
-🔗 **Try the app here:**
-https://genai-app-production-267e.up.railway.app/docs
+ **Try the app here:**  
+[https://genai-app-production-267e.up.railway.app/docs](https://genai-app-production-267e.up.railway.app/docs)
 
 ---
 
@@ -24,21 +24,19 @@ Supports the following formats:
 * **TXT**
 * **MD**
 
-( *Image OCR removed from this version to improve stability on Streamlit Cloud.*)
-
 ---
 
 ###  2. Intelligent Text Chunking & Retrieval
 
 * The system breaks long documents into smaller chunks.
 * Uses **BM25Okapi** to retrieve the most relevant chunks from notes.
-* Ensures highly accurate question answering.
+* Ensures highly accurate, context-grounded question answering.
 
 ---
 
-###  3. T5 Question Answering
+###  3. LLaMA-Powered Question Answering
 
-* Uses a **fine-tuned or base T5 model** for generating answers.
+* Uses **LLaMA 3.3 70B** via the **Groq API** for fast, high-quality answers.
 * Model answers **only from the retrieved user notes**.
 * If the answer is not found, the system explicitly says so.
 
@@ -48,7 +46,7 @@ Supports the following formats:
 
 * Login & Signup system
 * Every user has dedicated storage & credits
-* Passwords stored in JSON database
+* Passwords stored in a JSON database
 
 ---
 
@@ -68,17 +66,17 @@ All feedback is stored in:
 data/user_feedback.jsonl
 ```
 
-This can later be used to fine-tune the T5 model for better accuracy.
+This can later be used for model evaluation or fine-tuning.
 
 ---
 
 ##  Application Workflow
 
 1. User logs in / signs up
-2. Uploads documents (PDF/TXT/MD)
+2. Uploads documents (PDF / TXT / MD)
 3. Text is extracted & chunked
-4. BM25 retrieves relevant chunks
-5. Chunks + question → sent to T5 model
+4. BM25 retrieves the most relevant chunks
+5. Chunks + question → sent to Groq (LLaMA 3.3 70B)
 6. Answer generated
 7. Credit deducted
 8. User can submit feedback
@@ -88,38 +86,29 @@ This can later be used to fine-tune the T5 model for better accuracy.
 ##  Project Structure
 
 ```
-├── app.py                     # Main Streamlit application
-├── finetune_t5.py             # Script for optional T5 fine-tuning
+├── main.py                    # FastAPI backend
 ├── requirements.txt           # Python dependencies
 ├── data/
 │   ├── users.json             # User database
 │   ├── user_feedback.jsonl    # Feedback logs
 │   └── uploaded/              # User-uploaded files
-├── models/
-│   └── finetuned_t5/          # Optional fine-tuned model
 ```
 
 ---
 
-##  Technologies Used
+## 🛠️ Technologies Used
 
-###  Backend / ML
+### Backend / AI
 
 * Python
-* HuggingFace Transformers
-* T5 (base or fine-tuned)
-* TensorFlow 
+* FastAPI + Uvicorn
+* Groq API (LLaMA 3.3 70B)
 
-###  Document Processing
+### Document Processing
 
 * PyPDF2
 * BM25 (rank_bm25)
-* PIL
-
-###  Frontend
-
-* Streamlit
-* Custom authentication & credit system
+* NumPy
 
 ---
 
@@ -146,53 +135,80 @@ source .venv/bin/activate     # Mac/Linux
 pip install -r requirements.txt
 ```
 
-### 4️ Run the app
+### 4️ Set your Groq API key
+
+Create a `.env` file or export the variable:
 
 ```bash
-streamlit run app.py
+export GROQ_API_KEY=your_groq_api_key_here
+```
+
+### 5️ Run the backend
+
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`.
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint    | Description                        |
+|--------|-------------|------------------------------------|
+| GET    | `/`         | Health check                       |
+| POST   | `/upload`   | Upload a PDF, TXT, or MD file      |
+| POST   | `/ask`      | Ask a question from uploaded notes |
+| POST   | `/feedback` | Submit feedback on an answer       |
+
+---
+
+## 📝 API Usage Examples
+
+### Upload a document
+
+```bash
+curl -X POST "http://localhost:8000/upload" \
+  -F "file=@my_notes.pdf"
+```
+
+### Ask a question
+
+```bash
+curl -X POST "http://localhost:8000/ask" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the water cycle?", "top_k": 5}'
+```
+
+### Submit feedback
+
+```bash
+curl -X POST "http://localhost:8000/feedback" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What is the water cycle?",
+    "answer": "The water cycle is...",
+    "helpful": "yes",
+    "user_correct_answer": ""
+  }'
 ```
 
 ---
 
-##  Deployment (Streamlit Cloud)
+## Deployment
 
-1. Push the repo to GitHub
-2. Visit: [https://streamlit.io/cloud](https://streamlit.io/cloud)
-3. Create new app
-4. Select repo
-5. Choose `app.py` as entry file
-6. Deploy 
+This FastAPI backend can be deployed on any platform that supports Python:
 
-Streamlit Cloud automatically installs `requirements.txt`.
-
----
-
-##  Fine-Tuning the T5 Model (Optional)
-
-1. Collect user feedback in `data/user_feedback.jsonl`
-2. Train using:
-
-```bash
-python finetune_t5.py
-```
-
-3. Save the trained model to:
-
-```
-models/finetuned_t5/
-```
-
-4. Update model path inside `app.py`:
-
-```python
-MODEL_NAME = "models/finetuned_t5"
-```
+* **Railway** / **Render** — push repo and set `GROQ_API_KEY` as an environment variable
+* **Heroku** — use the included `Procfile`
+* **Docker** — containerize with a standard Python Dockerfile
 
 ---
 
 ##  Summary
 
-Smart Notes AI Assistant transforms static documents into an interactive question-answering experience.
-Ideal for students, professionals, and educators who want fast, accurate answers based on their own notes.
+Smart Notes AI Assistant transforms static documents into an interactive question-answering experience.  
+Ideal for students, professionals, and educators who want fast, accurate answers grounded in their own notes.
 
 ---
